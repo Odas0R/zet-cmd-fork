@@ -1,0 +1,13 @@
+# Ignore the zet binary at the root
+/zet
+
+# Ignore SQLite database files
+*.db*
+*.db-shm
+*.db-wal
+
+# Ignore node modules
+node_modules/
+
+# But explicitly track the cmd/zet folder
+!cmd/zet/
