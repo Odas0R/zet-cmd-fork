@@ -21,8 +21,9 @@ type Database struct {
 	log                   *log.Logger
 }
 
-type NewDatabaseOptions struct {
+type DatabaseOptions struct {
 	URL                   string
+	InMemory              bool // Added to determine if the database should be in-memory
 	MaxOpenConnections    int
 	MaxIdleConnections    int
 	ConnectionMaxLifetime time.Duration
@@ -32,18 +33,22 @@ type NewDatabaseOptions struct {
 
 // NewDatabase with the given options.
 // If no logger is provided, logs are discarded.
-func NewDatabase(opts NewDatabaseOptions) *Database {
+func NewDatabase(opts DatabaseOptions) *Database {
 	if opts.Log == nil {
 		opts.Log = log.New(io.Discard, "", 0)
 	}
 
-	// - Set WAL mode (not strictly necessary each time because it's persisted in the database, but good for first run)
-	// - Set busy timeout, so concurrent writers wait on each other instead of erroring immediately
-	// - Enable foreign key checks
-	opts.URL += "?_journal=WAL&_timeout=5000&_fk=true"
+	var finalURL string
+	if opts.InMemory {
+		// Using a shared in-memory database
+		finalURL = "file:memdb1?mode=memory&cache=shared"
+	} else {
+		// Append parameters for a file-based database
+		finalURL = opts.URL + "?_journal=WAL&_timeout=5000&_fk=true"
+	}
 
 	return &Database{
-		url:                   opts.URL,
+		url:                   finalURL,
 		maxOpenConnections:    opts.MaxOpenConnections,
 		maxIdleConnections:    opts.MaxIdleConnections,
 		connectionMaxLifetime: opts.ConnectionMaxLifetime,

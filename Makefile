@@ -9,7 +9,7 @@ watch:
 	find . -name '*.go' | entr -cs 'TEST=true go test -tags "fts5" ./... && go build -tags "fts5" -o zet ./cmd/zet'
 new:
 	@read -p "Enter the name of the new migration: " name; \
-		goose -dir ./migrations sqlite3 ./zettel.db create $$name sql
+		goose -dir ./migrations sqlite3 ./zettel.db create $$name go
 up:
 	goose -dir ./migrations sqlite3 ./zettel.db up-by-one
 down:

@@ -1,22 +1,18 @@
 package sqltest
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/odas0r/zet/internal/config"
 	"github.com/odas0r/zet/pkg/database"
 	"github.com/pressly/goose"
 )
 
-const migrationsPath = "/home/odas0r/github.com/odas0r/zet-cmd/migrations"
-
 // CreateDatabase for testing.
-func CreateDatabase(t *testing.T, cfg *config.Config) *database.Database {
+func CreateDatabase(t *testing.T) *database.Database {
 	t.Helper()
 
-	db := database.NewDatabase(database.NewDatabaseOptions{
-		URL:                fmt.Sprintf("file:%s/zettel_test.db", cfg.Root),
+	db := database.NewDatabase(database.DatabaseOptions{
+		InMemory:           true,
 		MaxOpenConnections: 1,
 		MaxIdleConnections: 1,
 	})
@@ -29,7 +25,7 @@ func CreateDatabase(t *testing.T, cfg *config.Config) *database.Database {
 		t.Fatal(err)
 	}
 
-	if err := goose.Up(db.DB.DB, migrationsPath); err != nil {
+	if err := goose.Up(db.DB.DB, ""); err != nil {
 		t.Fatal(err)
 	}
 

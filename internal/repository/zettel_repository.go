@@ -11,7 +11,6 @@ import (
 
 	"github.com/gosimple/slug"
 	"github.com/jmoiron/sqlx"
-	"github.com/odas0r/zet/internal/config"
 	"github.com/odas0r/zet/internal/model"
 	"github.com/odas0r/zet/pkg/database"
 )

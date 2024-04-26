@@ -1,5 +1,19 @@
--- +goose Up
--- +goose StatementBegin
+package migrations
+
+import (
+	"context"
+	"database/sql"
+
+	"github.com/pressly/goose/v3"
+)
+
+func init() {
+	goose.AddMigrationContext(upInit, downInit)
+}
+
+func upInit(ctx context.Context, tx *sql.Tx) error {
+	// This code is executed when the migration is applied.
+	_, err := tx.Exec(`
 create table zettel (
     id text not null primary key,
     title text not null,
@@ -36,10 +50,19 @@ create trigger link_updated_timestamp after update on link begin
   -- use ISO8601/RFC3339
   update link set updated_at = strftime('%Y-%m-%dT%H:%M:%fZ') where id = old.id;
 end;
--- +goose StatementEnd
+	`)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
--- +goose Down
--- +goose StatementBegin
+func downInit(ctx context.Context, tx *sql.Tx) error {
+	if _, err := tx.Exec(`
 drop table link;
 drop table zettel;
--- +goose StatementEnd
+`); err != nil {
+		return err
+	}
+	return nil
+}

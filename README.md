@@ -18,7 +18,7 @@ integrate or extend the existing functionality.
 - ✅ **Create, Open, and Remove Zettels**: Easily manage your notes from the command line.
 - ✅ **Search**: Utilize SQLite's FTS5 extension for powerful full-text search capabilities.
 - ✅ **Linking and Backlinking**: Connect your thoughts and navigate through them intuitively.
-- ✅ **History and Backlog**: Keep track of your most recent and overall zettel landscape.
+- ✅ **History and Backlog**: Keep track of your most recent and overall zettel landscape.os
 - ✅ **Server Mode**: A web view to visually navigate and search through your zettelkasten.
 - ✅ **Sync and Save**: Keep your filesystem and database in harmony, with automatic fixes on the go.
 
