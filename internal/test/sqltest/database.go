@@ -5,6 +5,9 @@ import (
 
 	"github.com/odas0r/zet/pkg/database"
 	"github.com/pressly/goose"
+
+	// Ensure migrations are imported
+	_ "github.com/odas0r/zet/migrations"
 )
 
 // CreateDatabase for testing.
@@ -25,7 +28,7 @@ func CreateDatabase(t *testing.T) *database.Database {
 		t.Fatal(err)
 	}
 
-	if err := goose.Up(db.DB.DB, ""); err != nil {
+	if err := goose.Up(db.DB.DB, "migrations"); err != nil {
 		t.Fatal(err)
 	}
 
