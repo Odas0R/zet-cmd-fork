@@ -9,8 +9,7 @@ import (
 
 	"github.com/muxit-studio/test/assert"
 	"github.com/muxit-studio/test/require"
-	"github.com/odas0r/zet/internal/model"
-	"github.com/odas0r/zet/internal/test/sqltest"
+	"github.com/odas0r/zet/pkg/test/sqltest"
 )
 
 var cfg = config.New("/tmp/zet-cmd")

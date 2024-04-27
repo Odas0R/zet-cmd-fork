@@ -3,6 +3,7 @@ module github.com/odas0r/zet
 go 1.22
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/gosimple/slug v1.13.1
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/mattn/go-sqlite3 v1.14.16
