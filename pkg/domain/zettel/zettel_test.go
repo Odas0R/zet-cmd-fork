@@ -20,8 +20,31 @@ func TestZettel_NewZettel(t *testing.T) {
 			test:        "should return an error when the title is empty",
 			title:       "",
 			content:     "content",
-			kind:        Permanent,
-			expectedErr: ErrMissingValues,
+			kind:        zettel.Permanent,
+			expectedErr: zettel.ErrMissingValues,
 		},
+		{
+			test:        "should return an error when the content is empty",
+			title:       "title",
+			content:     "",
+			kind:        zettel.Permanent,
+			expectedErr: zettel.ErrMissingValues,
+		},
+		{
+			test:        "should return an error when the kind is wrong",
+			title:       "title",
+			content:     "content",
+			kind:        "random_kind",
+			expectedErr: zettel.ErrInvalidZettelKind,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.test, func(t *testing.T) {
+			_, err := zettel.New(tc.title, tc.content, tc.kind)
+			if err != tc.expectedErr {
+				t.Errorf("expected error %v, got %v", tc.expectedErr, err)
+			}
+		})
 	}
 }
