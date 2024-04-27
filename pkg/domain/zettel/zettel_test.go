@@ -11,7 +11,7 @@ func TestZettel_NewZettel(t *testing.T) {
 		test        string
 		title       string
 		content     string
-		kind        zettel.ZettelKind
+		kind        zettel.Kind
 		expectedErr error
 	}
 

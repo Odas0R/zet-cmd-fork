@@ -20,6 +20,4 @@ type Repository interface {
 	List() ([]Zettel, error)
 	ListFleet() ([]Zettel, error)
 	ListPermanent() ([]Zettel, error)
-	Search(query string) ([]Zettel, error)
-	Reset() error
 }

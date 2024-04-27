@@ -1,4 +1,4 @@
-package shared
+package sqlite
 
 import (
 	"database/sql/driver"
