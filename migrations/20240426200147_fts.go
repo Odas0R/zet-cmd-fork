@@ -15,18 +15,18 @@ func upFts(ctx context.Context, tx *sql.Tx) error {
 	// This code is executed when the migration is applied.
 	_, err := tx.Exec(`
 create virtual table zettel_fts
-  using fts5(id, title, content, path, tokenize = porter, content = 'zettel', content_rowid = 'id');
+  using fts5(id, title, content, tokenize = porter, content = 'zettel', content_rowid = 'id');
 
 create trigger zettel_after_insert after insert on zettel begin
-  insert into zettel_fts(rowid, id, title, content, path)
-    values (new.id, new.id, new.title, new.content, new.path);
+  insert into zettel_fts(rowid, id, title, content)
+    values (new.id, new.id, new.title, new.content);
 end;
 
 create trigger zettel_after_update after update on zettel begin
   insert into zettel_fts(zettel_fts, rowid)
     values('delete', old.id);
-  insert into zettel_fts(rowid, id, title, content, path)
-    values (new.id, new.id, new.title, new.content, new.path);
+  insert into zettel_fts(rowid, id, title, content)
+    values (new.id, new.id, new.title, new.content);
 end;
 
 create trigger zettel_after_delete after delete on zettel begin

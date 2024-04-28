@@ -1,12 +1,10 @@
 package link
 
-import (
-	"github.com/odas0r/zet/pkg/domain/shared"
-)
+import "time"
 
 type Link struct {
 	from      string
 	to        string
-	createdAt shared.Time
-	updatedAt shared.Time
+	createdAt time.Time
+	updatedAt time.Time
 }

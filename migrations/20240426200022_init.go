@@ -17,15 +17,15 @@ func upInit(ctx context.Context, tx *sql.Tx) error {
 create table zettel (
     id text not null primary key,
     title text not null,
-    path text not null,
-    type text not null,
     content text not null,
+    kind text not null check (kind in ('fleet', 'permanent')),
     created_at text not null default (strftime('%Y-%m-%dT%H:%M:%fZ')),
-    updated_at text not null default (strftime('%Y-%m-%dT%H:%M:%fZ'))
+    updated_at text not null default (strftime('%Y-%m-%dT%H:%M:%fZ')),
+    check (created_at <= updated_at),
+    check (kind in ('fleet', 'permanent'))
 ) strict;
 
 create index zettel_created_idx on zettel (created_at);
-create index zettel_path_idx on zettel (path);
 
 create trigger zettel_updated_timestamp after update on zettel begin
   -- use ISO8601/RFC3339

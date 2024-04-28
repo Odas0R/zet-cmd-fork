@@ -1,24 +1,15 @@
 build:
-	go build -tags "fts5" -o zet ./cmd/zet \
-		&& goose -dir ./migrations sqlite3 ./zettel.db up
-build-tmp:
-	TEST=true go test -tags "fts5" ./... \
-	&& go build -tags "fts5" -o zet ./cmd/zet \
-		&& goose -dir ./migrations sqlite3 /tmp/zet/zettel.db up
-watch:
-	find . -name '*.go' | entr -cs 'TEST=true go test -tags "fts5" ./... && go build -tags "fts5" -o zet ./cmd/zet'
+	go build -tags "fts5" -o zet ./cmd
 new:
 	@read -p "Enter the name of the new migration: " name; \
-		goose -dir ./migrations sqlite3 ./zettel.db create $$name go
+	go run -tags "fts5" ./cmd/main.go migrate create $$name
 up:
-	goose -dir ./migrations sqlite3 ./zettel.db up-by-one
+	@go run -tags "fts5" ./cmd/main.go migrate up
 down:
-	goose -dir ./migrations sqlite3 ./zettel.db down
+	@go run -tags "fts5" ./cmd/main.go migrate down
 status:
-	goose -dir ./migrations sqlite3 ./zettel.db status
+	@go run -tags "fts5" ./cmd/main.go migrate status
 schema:
 	sqlite3 ./zettel.db .schema
 test:
-	go test -tags "fts5" ./...
-
-.PHONY: build test new up down status schema watch
+	go test -v -tags "fts5" ./...
