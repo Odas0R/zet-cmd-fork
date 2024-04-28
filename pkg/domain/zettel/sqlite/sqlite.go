@@ -6,13 +6,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 	"github.com/odas0r/zet/pkg/database"
 	"github.com/odas0r/zet/pkg/domain/shared/sqlite"
 	"github.com/odas0r/zet/pkg/domain/zettel"
 )
 
 type SQLiteRepository struct {
-	db *database.Database
+	db *sqlx.DB
 }
 
 type sqliteZettel struct {
@@ -49,10 +50,14 @@ func (sz sqliteZettel) ToAggregate() zettel.Zettel {
 	return z
 }
 
-func New(db *database.Database) *SQLiteRepository {
-	return &SQLiteRepository{
-		db: db,
+func New(database *database.Database) (*SQLiteRepository, error) {
+	if err := database.Connect(); err != nil {
+		return nil, err
 	}
+
+	return &SQLiteRepository{
+		db: database.DB,
+	}, nil
 }
 
 func (r *SQLiteRepository) FindByID(id uuid.UUID) (zettel.Zettel, error) {
@@ -67,7 +72,7 @@ func (r *SQLiteRepository) FindByID(id uuid.UUID) (zettel.Zettel, error) {
   where id = $1
   `
 
-	if err := r.db.DB.GetContext(ctx, &sz, query, id); err != nil {
+	if err := r.db.GetContext(ctx, &sz, query, id); err != nil {
 		if err == sql.ErrNoRows {
 			return zettel.Zettel{}, zettel.ErrZettelNotFound
 		}
@@ -81,16 +86,16 @@ func (r *SQLiteRepository) Save(z zettel.Zettel) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	sz := NewFromZettel(z)
+	internal := NewFromZettel(z)
 
 	query := `
   insert into zettel (id, title, content, kind)
 	values (:id, :title, :content, :kind)
 	on conflict (id) do
-	update set title = excluded.title, content = excluded.content, kind = excluded.kind
+	update set title = excluded.title, content = excluded.content, kind = excluded.kind;
   `
 
-	_, err := r.db.DB.NamedExecContext(ctx, query, sz)
+	_, err := r.db.NamedExecContext(ctx, query, internal)
 	return err
 }
 
@@ -105,7 +110,7 @@ func (r *SQLiteRepository) Update(z zettel.Zettel) error {
   set title = :title, content = :content, kind = :kind
   where id = :id
   `
-	_, err := r.db.DB.NamedExecContext(ctx, query, sz)
+	_, err := r.db.NamedExecContext(ctx, query, sz)
 	return err
 }
 
