@@ -12,23 +12,19 @@ func init() {
 }
 
 func upInit(ctx context.Context, tx *sql.Tx) error {
-	// This code is executed when the migration is applied.
 	_, err := tx.Exec(`
 create table zettel (
     id text not null primary key,
     title text not null,
     content text not null,
-    kind text not null check (kind in ('fleet', 'permanent')),
+    kind text not null,
     created_at text not null default (strftime('%Y-%m-%dT%H:%M:%fZ')),
-    updated_at text not null default (strftime('%Y-%m-%dT%H:%M:%fZ')),
-    check (created_at <= updated_at),
-    check (kind in ('fleet', 'permanent'))
+    updated_at text not null default (strftime('%Y-%m-%dT%H:%M:%fZ'))
 ) strict;
 
 create index zettel_created_idx on zettel (created_at);
 
 create trigger zettel_updated_timestamp after update on zettel begin
-  -- use ISO8601/RFC3339
   update zettel set updated_at = strftime('%Y-%m-%dT%H:%M:%fZ') where id = old.id;
 end;
 
@@ -47,7 +43,6 @@ create table link (
 create index link_created_idx on link (created_at);
 
 create trigger link_updated_timestamp after update on link begin
-  -- use ISO8601/RFC3339
   update link set updated_at = strftime('%Y-%m-%dT%H:%M:%fZ') where id = old.id;
 end;
 	`)

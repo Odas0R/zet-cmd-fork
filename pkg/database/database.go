@@ -3,12 +3,11 @@ package database
 import (
 	"context"
 	"database/sql"
-	"io"
-	"log"
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/mattn/go-sqlite3"
+	"github.com/qustavo/sqlhooks/v2"
 )
 
 type Database struct {
@@ -18,42 +17,40 @@ type Database struct {
 	maxIdleConnections    int
 	connectionMaxLifetime time.Duration
 	connectionMaxIdleTime time.Duration
-	log                   *log.Logger
+	LogQueries            bool
 }
 
-type DatabaseOptions struct {
+type Options struct {
 	URL                   string
-	InMemory              bool // Added to determine if the database should be in-memory
 	MaxOpenConnections    int
 	MaxIdleConnections    int
 	ConnectionMaxLifetime time.Duration
 	ConnectionMaxIdleTime time.Duration
-	Log                   *log.Logger
+	LogQueries            bool
 }
 
-// NewDatabase with the given options.
-// If no logger is provided, logs are discarded.
-func NewDatabase(opts DatabaseOptions) *Database {
-	if opts.Log == nil {
-		opts.Log = log.New(io.Discard, "", 0)
-	}
+func init() {
+	driver := &sqlite3.SQLiteDriver{}
+	sql.Register("sqlite3_extended", driver)
+	sql.Register("sqlite3_extended_with_logs", sqlhooks.Wrap(driver, QueryLogger()))
+}
 
-	var finalURL string
-	if opts.InMemory {
-		// Using a shared in-memory database
-		finalURL = "file:memdb1?mode=memory&cache=shared"
-	} else {
-		// Append parameters for a file-based database
-		finalURL = opts.URL + "?_journal=WAL&_timeout=5000&_fk=true"
-	}
+// New with the given options.
+// If no logger is provided, logs are discarded.
+func New(opts Options) *Database {
+
+	// - Set WAL mode (not strictly necessary each time because it's persisted in the database, but good for first run)
+	// - Set busy timeout, so concurrent writers wait on each other instead of erroring immediately
+	// - Enable foreign key checks
+	opts.URL += "?_journal=WAL&_timeout=5000&_fk=true"
 
 	return &Database{
-		url:                   finalURL,
+		url:                   opts.URL,
 		maxOpenConnections:    opts.MaxOpenConnections,
 		maxIdleConnections:    opts.MaxIdleConnections,
 		connectionMaxLifetime: opts.ConnectionMaxLifetime,
 		connectionMaxIdleTime: opts.ConnectionMaxIdleTime,
-		log:                   opts.Log,
+		LogQueries:            opts.LogQueries,
 	}
 }
 
@@ -61,20 +58,19 @@ func (d *Database) Connect() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	d.log.Println("Connecting to database at", d.url)
+	var driverName string
+	if d.LogQueries {
+		driverName = "sqlite3_extended_with_logs"
+	} else {
+		driverName = "sqlite3_extended"
+	}
 
 	var err error
-	d.DB, err = sqlx.ConnectContext(ctx, "sqlite3", d.url)
+	d.DB, err = sqlx.ConnectContext(ctx, driverName, d.url)
 	if err != nil {
 		return err
 	}
 
-	d.log.Println("Setting connection pool options (",
-		"max open connections:", d.maxOpenConnections,
-		", max idle connections:", d.maxIdleConnections,
-		", connection max lifetime:", d.connectionMaxLifetime,
-		", connection max idle time:", d.connectionMaxIdleTime,
-		")")
 	d.DB.SetMaxOpenConns(d.maxOpenConnections)
 	d.DB.SetMaxIdleConns(d.maxIdleConnections)
 	d.DB.SetConnMaxLifetime(d.connectionMaxLifetime)

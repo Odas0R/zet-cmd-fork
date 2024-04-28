@@ -16,6 +16,7 @@ require (
 	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/muxit-studio/color v0.1.0 // indirect
 	github.com/muxit-studio/columnize v0.0.0-20200819155840-d363dedc9af5 // indirect
+	github.com/qustavo/sqlhooks/v2 v2.1.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sethvargo/go-retry v0.2.4 // indirect
 	github.com/xrash/smetrics v0.0.0-20240312152122-5f08fbb34913 // indirect

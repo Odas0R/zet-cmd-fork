@@ -17,10 +17,11 @@ func TestSQLite_GetZettel(t *testing.T) {
 	}
 
 	repo, err := sqlite.New(
-		database.NewDatabase(database.DatabaseOptions{
+		database.New(database.Options{
 			URL:                "../../../../zettel.db",
 			MaxOpenConnections: 1,
 			MaxIdleConnections: 1,
+			LogQueries:         true,
 		}),
 	)
 	if err != nil {

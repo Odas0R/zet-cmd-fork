@@ -15,12 +15,9 @@ func upHistory(ctx context.Context, tx *sql.Tx) error {
 	// This code is executed when the migration is applied.
 	_, err := tx.Exec(`
 	create table history (
-    zettel_id text not null,
-    updated_at text not null default (strftime('%Y-%m-%dT%H:%M:%fZ')), -- use ISO8601/RFC3339
+    zettel_id text not null primary key,
     created_at text not null default (strftime('%Y-%m-%dT%H:%M:%fZ')), -- use ISO8601/RFC3339
 
-
-    primary key (zettel_id),
     foreign key (zettel_id) references zettel(id) on delete cascade
 ) strict;
 `)

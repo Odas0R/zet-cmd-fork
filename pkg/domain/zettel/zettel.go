@@ -47,8 +47,8 @@ func (z *Zettel) Kind() Kind           { return z.kind }
 func (z *Zettel) CreatedAt() time.Time { return z.createdAt }
 func (z *Zettel) UpdatedAt() time.Time { return z.updatedAt }
 
-func (z *Zettel) SetID(id uuid.UUID) { z.id = id }
-func (z *Zettel) SetKind(kind Kind) { z.kind = kind }
+func (z *Zettel) SetID(id uuid.UUID)       { z.id = id }
+func (z *Zettel) SetKind(kind Kind)        { z.kind = kind }
 func (z *Zettel) SetCreatedAt(t time.Time) { z.createdAt = t }
 func (z *Zettel) SetUpdatedAt(t time.Time) { z.updatedAt = t }
 func (z *Zettel) SetTitle(title string) {

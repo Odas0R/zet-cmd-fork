@@ -44,7 +44,7 @@ func main() {
 						Name:  "up",
 						Usage: "Migrate the database to the latest version",
 						Action: func(c *cli.Context) error {
-							db := database.NewDatabase(database.DatabaseOptions{
+							db := database.New(database.Options{
 								URL: "./zettel.db",
 							})
 
@@ -77,7 +77,7 @@ func main() {
 						Name:  "down",
 						Usage: "Downgrade the database by one version",
 						Action: func(c *cli.Context) error {
-							db := database.NewDatabase(database.DatabaseOptions{
+							db := database.New(database.Options{
 								URL: "./zettel.db",
 							})
 
@@ -108,7 +108,7 @@ func main() {
 						Name:  "status",
 						Usage: "Print the status of the database",
 						Action: func(c *cli.Context) error {
-							db := database.NewDatabase(database.DatabaseOptions{
+							db := database.New(database.Options{
 								URL: "./zettel.db",
 							})
 
