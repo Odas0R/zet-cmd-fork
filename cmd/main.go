@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
+	"github.com/a-h/templ"
+	"github.com/odas0r/zet/pkg/components"
 	"github.com/odas0r/zet/pkg/database"
 	"github.com/pressly/goose/v3"
 	"github.com/urfave/cli/v2"
@@ -27,13 +29,24 @@ func main() {
 				Name:  "serve",
 				Usage: "Starts the web server",
 				Action: func(c *cli.Context) error {
-					if c.NArg() == 0 {
-						return nil
-					}
+					// repo, err := sqlite.New(
+					// 	database.New(database.Options{
+					// 		URL:                "../../../../zettel.db",
+					// 		MaxOpenConnections: 1,
+					// 		MaxIdleConnections: 1,
+					// 		LogQueries:         true,
+					// 	}),
+					// )
+					// if err != nil {
+					// 	return err
+					// }
 
-					// TODO: initialize the database migrations
+					component := components.Hello("John")
 
-					return errors.New("TODO: implement")
+					http.Handle("/", templ.Handler(component))
+
+					fmt.Println("Listening on :3000")
+					return http.ListenAndServe(":3000", nil)
 				},
 			},
 			{

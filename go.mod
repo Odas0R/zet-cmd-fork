@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/a-h/templ v0.2.663 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/muxit-studio/color v0.1.0 // indirect
