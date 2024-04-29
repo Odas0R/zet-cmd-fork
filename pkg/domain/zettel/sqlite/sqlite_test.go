@@ -4,10 +4,18 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/odas0r/zet/pkg/database"
 	"github.com/odas0r/zet/pkg/domain/zettel"
-	"github.com/odas0r/zet/pkg/domain/zettel/sqlite"
 )
+
+func TestSQLite_SaveZettel(t *testing.T) {
+	z, err := zettel.New("title", "content", zettel.Fleet)
+	if err != nil {
+		t.Error(err)
+	}
+	if err := repo.Save(z); err != nil {
+		t.Error(err)
+	}
+}
 
 func TestSQLite_GetZettel(t *testing.T) {
 	type testCase struct {
@@ -16,26 +24,13 @@ func TestSQLite_GetZettel(t *testing.T) {
 		expectedErr error
 	}
 
-	repo, err := sqlite.New(
-		database.New(database.Options{
-			URL:                "../../../../zettel.db",
-			MaxOpenConnections: 1,
-			MaxIdleConnections: 1,
-			LogQueries:         true,
-		}),
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// Create a new zettel
 	z, err := zettel.New("title", "content", zettel.Fleet)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	if err := repo.Save(z); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	testCases := []testCase{
@@ -54,4 +49,54 @@ func TestSQLite_GetZettel(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSQLite_UpdateZettel(t *testing.T) {
+	type testCase struct {
+		name        string
+		zettel      func() zettel.Zettel
+		expectedErr error
+	}
+
+	testCases := []testCase{
+		{
+			name: "Can update zettel",
+			zettel: func() zettel.Zettel {
+				zet := createZettel(t)
+				zet.SetTitle("new title")
+				zet.SetBody("new body")
+				return zet
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "No zettel by ID",
+			zettel: func() zettel.Zettel {
+				zet := createZettel(t)
+				zet.SetID(uuid.MustParse("f47ac10b-58cc-0372-8567-0e02b2c3d479"))
+				return zet
+			},
+			expectedErr: zettel.ErrZettelNotFound,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			z := tc.zettel()
+			if err := repo.Update(z); err != tc.expectedErr {
+				t.Errorf("expected error %v, got %v", tc.expectedErr, err)
+			}
+		})
+	}
+}
+
+func createZettel(t *testing.T) zettel.Zettel {
+	z, err := zettel.New("title", "content", zettel.Fleet)
+	if err != nil {
+		t.Error(err)
+	}
+	if err := repo.Save(z); err != nil {
+		t.Error(err)
+	}
+	return z
 }

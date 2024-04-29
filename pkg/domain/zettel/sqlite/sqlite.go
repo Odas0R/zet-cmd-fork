@@ -15,12 +15,12 @@ type SQLiteRepository struct {
 }
 
 type sqliteZettel struct {
-	ID        uuid.UUID   `db:"id"`
-	Title     string      `db:"title"`
-	Content   string      `db:"content"`
-	Kind      string      `db:"kind"`
-	CreatedAt sqlite.Time `db:"created_at"`
-	UpdatedAt sqlite.Time `db:"updated_at"`
+	ID      uuid.UUID    `db:"id"`
+	Title   string       `db:"title"`
+	Content string       `db:"content"`
+	Kind    zettel.Kind  `db:"kind"`
+	Created *sqlite.Time `db:"created_at"`
+	Updated *sqlite.Time `db:"updated_at"`
 }
 
 // NewFromZettel takes in an aggregate root and returns a struct that can be
@@ -30,7 +30,9 @@ func NewFromZettel(z zettel.Zettel) sqliteZettel {
 		ID:      z.ID(),
 		Title:   z.Title(),
 		Content: z.Content(),
-		Kind:    string(z.Kind()),
+		Kind:    z.Kind(),
+		Created: &sqlite.Time{T: z.Timestamp().Created},
+		Updated: &sqlite.Time{T: z.Timestamp().Updated},
 	}
 }
 
@@ -41,10 +43,9 @@ func (sz sqliteZettel) ToAggregate() zettel.Zettel {
 	z.SetID(sz.ID)
 	z.SetTitle(sz.Title)
 	z.SetBody(sz.Content)
-	// cast the string to the Kind type
-	z.SetKind(zettel.Kind(sz.Kind))
-	// z.SetCreatedAt(sz.createdAt.T)
-	// z.SetUpdatedAt(sz.updatedAt.T)
+	z.SetKind(sz.Kind)
+	z.SetCreated(sz.Created.T)
+	z.SetUpdated(sz.Updated.T)
 
 	return z
 }
@@ -78,14 +79,15 @@ func (r *SQLiteRepository) FindByID(id uuid.UUID) (zettel.Zettel, error) {
 	return sz.ToAggregate(), nil
 }
 
+// Save takes in an aggregate root and saves it to the database as an upsert
 func (r *SQLiteRepository) Save(z zettel.Zettel) error {
 	internal := NewFromZettel(z)
 
 	query := `
-  insert into zettel (id, title, content, kind)
-	values (:id, :title, :content, :kind)
+  insert into zettel (id, title, content, kind, updated_at, created_at)
+	values (:id, :title, :content, :kind, :updated_at, :created_at)
 	on conflict (id) do
-	update set title = excluded.title, content = excluded.content, kind = excluded.kind
+	update set title = excluded.title, content = excluded.content, kind = excluded.kind, updated_at = excluded.updated_at
   `
 
 	_, err := r.db.NamedExec(query, internal)
@@ -93,15 +95,29 @@ func (r *SQLiteRepository) Save(z zettel.Zettel) error {
 }
 
 func (r *SQLiteRepository) Update(z zettel.Zettel) error {
-	sz := NewFromZettel(z)
+	internal := NewFromZettel(z)
 
 	query := `
-  update zettel
-  set title = :title, content = :content, kind = :kind
-  where id = :id
-  `
-	_, err := r.db.NamedExec(query, sz)
-	return err
+	update zettel
+	set title = :title, content = :content, kind = :kind, updated_at = :updated_at
+	where id = :id
+	`
+
+	result, err := r.db.NamedExec(query, internal)
+	if err != nil {
+		return err
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if count == 0 {
+		return zettel.ErrZettelNotFound
+	}
+
+	return nil
 }
 
 func (r *SQLiteRepository) Delete(id uuid.UUID) error {
