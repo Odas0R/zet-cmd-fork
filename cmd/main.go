@@ -43,12 +43,12 @@ func main() {
 					controller := controllers.NewController(workspace.Workspace{})
 
 					mux := http.NewServeMux()
-					mux.HandleFunc("/", controller.HandleHome)
-					mux.HandleFunc("/create", controller.HandleCreateForm)
-					mux.HandleFunc("/create", controller.HandleCreate)
-					mux.HandleFunc("/archive/{id}", controller.HandleArchive)
-					mux.HandleFunc("/initialize", controller.HandleInitializeForm)
-					mux.HandleFunc("/initialize", controller.HandleInitialize)
+					mux.HandleFunc("GET /", controller.HandleHome)
+					mux.HandleFunc("GET /create", controller.HandleCreateForm)
+					mux.HandleFunc("POST /create", controller.HandleCreate)
+					mux.HandleFunc("GET /archive/{id}", controller.HandleArchive)
+					mux.HandleFunc("GET /initialize", controller.HandleInitializeForm)
+					mux.HandleFunc("POST /initialize", controller.HandleInitialize)
 
 					log.Println("Listening on :3000")
 					return http.ListenAndServe(":3000", mux)
