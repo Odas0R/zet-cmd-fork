@@ -126,6 +126,19 @@ func (r *SQLiteRepository) Delete(id uuid.UUID) error {
   where id = $1
   `
 
-	_, err := r.db.Exec(query, id)
-	return err
+	result, err := r.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if count == 0 {
+		return zettel.ErrZettelNotFound
+	}
+
+	return nil
 }

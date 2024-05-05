@@ -19,6 +19,11 @@ type Zettel struct {
 	content   *Content
 	kind      Kind
 	timestamp timestamp.Timestamp
+
+	// TODO: add links & backlinks
+	//
+	// links []Link
+	// backlinks []Link
 }
 
 func New(title, content string, kind Kind) (Zettel, error) {
