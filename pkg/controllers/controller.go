@@ -89,7 +89,8 @@ func (c *Controller) HandleInitialize(w http.ResponseWriter, r *http.Request) {
     }
     path := r.Form.Get("path")
     if err := c.InitializeWorkspace(path); err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
+        component := components.WorkspaceInvalid()
+        templ.Handler(component).ServeHTTP(w, r)
         return
     }
     http.Redirect(w, r, "/", http.StatusSeeOther)
