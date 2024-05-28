@@ -79,10 +79,6 @@ func (d *Database) Connect() error {
 	return nil
 }
 
-type Transaction struct {
-	Tx *sqlx.Tx
-}
-
 func (d *Database) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Transaction, error) {
 	tx, err := d.DB.BeginTxx(ctx, opts)
 	if err != nil {
@@ -90,6 +86,10 @@ func (d *Database) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Transacti
 	}
 
 	return &Transaction{Tx: tx}, nil
+}
+
+type Transaction struct {
+	Tx *sqlx.Tx
 }
 
 func (t *Transaction) Commit() error {
