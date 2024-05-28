@@ -9,6 +9,7 @@ var (
 	ErrZettelNotFound = errors.New("error: zettel not found")
 )
 
+// TODO: @Guilherme
 type Repository interface {
 	Get(zettel Zettel) error
 	Save(zettel Zettel) error

@@ -129,3 +129,8 @@ func (r *SQLiteRepository) Delete(id uuid.UUID) error {
 	_, err := r.db.Exec(query, id)
 	return err
 }
+
+func (r *SQLiteRepository) Link(from, to uuid.UUID) error {
+	// TODO
+	return nil
+}
