@@ -77,12 +77,14 @@ func (z *Zettel) SetBody(body string) {
 func (z *Zettel) AddLink(to Zettel) {
 	link := NewLink(*z, to)
 	z.links = append(z.links, link)
+	to.AddBacklink(*z) // Adiciona automaticamente o backlink no zettel de destino
 }
 
 func (z *Zettel) RemoveLink(to Zettel) {
 	for i, link := range z.links {
 		if link.To.ID() == to.ID() {
 			z.links = append(z.links[:i], z.links[i+1:]...)
+			to.RemoveBacklink(*z) // Remove automaticamente o backlink correspondente no zettel de destino
 			break
 		}
 	}
