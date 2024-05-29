@@ -25,8 +25,8 @@ type Zettel struct {
 	// links []Link
 	// backlinks []Link
 	// TODO
-	links     []uuid.UUID
-	backlinks []uuid.UUID
+	links     []Link
+	backlinks []Link
 }
 
 func New(title, content string, kind Kind) (Zettel, error) {
@@ -44,8 +44,8 @@ func New(title, content string, kind Kind) (Zettel, error) {
 		},
 		kind:      kind,
 		timestamp: timestamp.New(),
-		links:     []uuid.UUID{},
-		backlinks: []uuid.UUID{},
+		links:     []Link{},
+		backlinks: []Link{},
 	}, nil
 }
 
@@ -54,8 +54,8 @@ func (z *Zettel) Title() string                  { return z.content.Title }
 func (z *Zettel) Content() string                { return z.content.Body }
 func (z *Zettel) Kind() Kind                     { return z.kind }
 func (z *Zettel) Timestamp() timestamp.Timestamp { return z.timestamp }
-func (z *Zettel) Links() []uuid.UUID             { return z.links }
-func (z *Zettel) Backlinks() []uuid.UUID         { return z.backlinks }
+func (z *Zettel) Links() []Link                  { return z.links }
+func (z *Zettel) Backlinks() []Link              { return z.backlinks }
 func (z *Zettel) SetID(id uuid.UUID)             { z.id = id }
 func (z *Zettel) SetKind(kind Kind)              { z.kind = kind }
 func (z *Zettel) SetCreated(created time.Time)   { z.timestamp.Created = created }
@@ -74,26 +74,28 @@ func (z *Zettel) SetBody(body string) {
 	z.content.Body = body
 }
 
-func (z *Zettel) AddLink(linkID uuid.UUID) {
-	z.links = append(z.links, linkID)
+func (z *Zettel) AddLink(to Zettel) {
+	link := NewLink(*z, to)
+	z.links = append(z.links, link)
 }
 
-func (z *Zettel) RemoveLink(linkID uuid.UUID) {
-	for i, id := range z.links {
-		if id == linkID {
+func (z *Zettel) RemoveLink(to Zettel) {
+	for i, link := range z.links {
+		if link.To.ID() == to.ID() {
 			z.links = append(z.links[:i], z.links[i+1:]...)
 			break
 		}
 	}
 }
 
-func (z *Zettel) AddBacklink(linkID uuid.UUID) {
-	z.backlinks = append(z.backlinks, linkID)
+func (z *Zettel) AddBacklink(from Zettel) {
+	link := NewLink(from, *z)
+	z.backlinks = append(z.backlinks, link)
 }
 
-func (z *Zettel) RemoveBacklink(linkID uuid.UUID) {
-	for i, id := range z.backlinks {
-		if id == linkID {
+func (z *Zettel) RemoveBacklink(from Zettel) {
+	for i, link := range z.backlinks {
+		if link.From.ID() == from.ID() {
 			z.backlinks = append(z.backlinks[:i], z.backlinks[i+1:]...)
 			break
 		}
