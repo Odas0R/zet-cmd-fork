@@ -20,11 +20,6 @@ type Zettel struct {
 	kind      Kind
 	timestamp timestamp.Timestamp
 
-	// TODO: add links & backlinks
-	//
-	// links []Link
-	// backlinks []Link
-	// TODO
 	links     []Link
 	backlinks []Link
 }
@@ -77,14 +72,14 @@ func (z *Zettel) SetBody(body string) {
 func (z *Zettel) AddLink(to Zettel) {
 	link := NewLink(*z, to)
 	z.links = append(z.links, link)
-	to.AddBacklink(*z) // Adiciona automaticamente o backlink no zettel de destino
+	to.AddBacklink(*z) // Automatically add the corresponding backlink to the destination Zettel
 }
 
 func (z *Zettel) RemoveLink(to Zettel) {
 	for i, link := range z.links {
 		if link.To.ID() == to.ID() {
 			z.links = append(z.links[:i], z.links[i+1:]...)
-			to.RemoveBacklink(*z) // Remove automaticamente o backlink correspondente no zettel de destino
+			to.RemoveBacklink(*z) // Automatically remove the corresponding backlink from the destination Zettel
 			break
 		}
 	}
