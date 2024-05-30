@@ -143,7 +143,53 @@ func (r *SQLiteRepository) Delete(id uuid.UUID) error {
 	return nil
 }
 
-func (r *SQLiteRepository) Link(from, to uuid.UUID) error {
-	// TODO
-	return nil
+func (r *SQLiteRepository) AddLink(fromID, toID uuid.UUID) error {
+	query := `
+        INSERT INTO link (zettel_id, link_id, created_at, updated_at)
+        VALUES ($1, $2, strftime('%Y-%m-%dT%H:%M:%fZ'), strftime('%Y-%m-%dT%H:%M:%fZ'))
+        ON CONFLICT (zettel_id, link_id) DO UPDATE SET updated_at = excluded.updated_at;
+    `
+	_, err := r.db.Exec(query, fromID, toID)
+	return err
+}
+
+func (r *SQLiteRepository) RemoveLink(fromID, toID uuid.UUID) error {
+	query := `
+        DELETE FROM link
+        WHERE zettel_id = $1 AND link_id = $2;
+    `
+	_, err := r.db.Exec(query, fromID, toID)
+	return err
+}
+
+func (r *SQLiteRepository) FindLinks(id uuid.UUID) ([]uuid.UUID, error) {
+	var links []uuid.UUID
+	query := `
+        SELECT link_id
+        FROM link
+        WHERE zettel_id = $1;
+    `
+	if err := r.db.Select(&links, query, id); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return links, nil
+}
+
+func (r *SQLiteRepository) FindBacklinks(id uuid.UUID) ([]uuid.UUID, error) {
+	var backlinks []uuid.UUID
+	query := `
+        SELECT zettel_id
+        FROM link
+        WHERE link_id = $1;
+    `
+	if err := r.db.Select(&backlinks, query, id); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return backlinks, nil
 }
