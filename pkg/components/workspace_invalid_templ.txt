@@ -1,0 +1,1 @@
+<html><body><p>Workspace is not initialized or invalid. Please set a valid workspace path.</p><form action=\"/initialize\" method=\"post\"><input type=\"text\" name=\"path\" placeholder=\"Workspace Path\" required> <button type=\"submit\">Initialize</button></form></body></html>

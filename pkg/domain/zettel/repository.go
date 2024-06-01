@@ -2,6 +2,8 @@ package zettel
 
 import (
 	"errors"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -10,15 +12,11 @@ var (
 )
 
 // TODO: @Guilherme
-type Repository interface {
-	Get(zettel Zettel) error
+type ZettelRepository interface {
+	FindByID(id uuid.UUID) (Zettel, error)
 	Save(zettel Zettel) error
-	SaveBulk(zettels ...Zettel) error
-	RemoveBulk(zettels ...Zettel) error
-	LastOpened(zettel Zettel) error
-	InsertHistory(zettel Zettel) error
-	History() ([]Zettel, error)
-	List() ([]Zettel, error)
-	ListFleet() ([]Zettel, error)
-	ListPermanent() ([]Zettel, error)
+	Update(z Zettel) error
+	Delete(id uuid.UUID) error
+	AddLink(from, to uuid.UUID) error
+	RemoveLink(from, to uuid.UUID) error
 }

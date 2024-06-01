@@ -10,6 +10,8 @@ import (
 	"github.com/odas0r/zet/pkg/controllers"
 	"github.com/odas0r/zet/pkg/database"
 	"github.com/odas0r/zet/pkg/domain/workspace"
+	"github.com/odas0r/zet/pkg/router"
+	"github.com/odas0r/zet/pkg/router/middleware"
 	"github.com/pressly/goose/v3"
 	"github.com/urfave/cli/v2"
 
@@ -28,7 +30,27 @@ func main() {
 			{
 				Name:  "serve",
 				Usage: "Starts the web server",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "port",
+						Aliases: []string{"p"},
+						Value:   "3000",
+						Usage:   "Port to listen on",
+					},
+					&cli.BoolFlag{
+						Name:  "dev",
+						Value: false,
+						Usage: "Enable development mode",
+					},
+					&cli.StringFlag{
+						Name:  "address",
+						Value: "localhost",
+						Usage: "Address to listen on",
+					},
+				},
 				Action: func(c *cli.Context) error {
+					port := c.String("port")
+					dev := c.Bool("dev")
 					// repo, err := sqlite.New(
 					// 	database.New(database.Options{
 					// 		URL:                "../../../../zettel.db",
@@ -42,16 +64,23 @@ func main() {
 					// }
 					controller := controllers.NewController(workspace.Workspace{})
 
-					mux := http.NewServeMux()
-					mux.HandleFunc("GET /", controller.HandleHome)
-					mux.HandleFunc("GET /create", controller.HandleCreateForm)
-					mux.HandleFunc("POST /create", controller.HandleCreate)
-					mux.HandleFunc("GET /archive/{id}", controller.HandleArchive)
-					mux.HandleFunc("GET /initialize", controller.HandleInitializeForm)
-					mux.HandleFunc("POST /initialize", controller.HandleInitialize)
+					r := router.New()
+					r.Use(middleware.WithLogger)
 
-					log.Println("Listening on :3000")
-					return http.ListenAndServe(":3000", mux)
+					r.HandleFunc("GET /", controller.HandleHome)
+					r.HandleFunc("GET /create", controller.HandleCreateForm)
+					r.HandleFunc("POST /create", controller.HandleCreate)
+					r.HandleFunc("GET /archive/{id}", controller.HandleArchive)
+					r.HandleFunc("GET /initialize", controller.HandleInitializeForm)
+					r.HandleFunc("POST /initialize", controller.HandleInitialize)
+
+					r.Handle("GET /public/",
+						http.StripPrefix("/public/", http.FileServer(http.Dir("public"))),
+						middleware.WithDisableCache(dev),
+					)
+
+					log.Printf("Listening on :%s\n", port)
+					return http.ListenAndServe(fmt.Sprintf(":%s", port), r)
 				},
 			},
 			{

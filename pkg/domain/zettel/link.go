@@ -1,16 +1,19 @@
 package zettel
 
-import "github.com/odas0r/zet/pkg/domain/shared/timestamp"
+import (
+	"github.com/google/uuid"
+	"github.com/odas0r/zet/pkg/domain/shared/timestamp"
+)
 
 // Link represents a connection between two Zettels
 type Link struct {
-	From      Zettel
-	To        Zettel
+	From      uuid.UUID // From        Zettel
+	To        uuid.UUID // To          Zettel
 	Timestamp timestamp.Timestamp
 }
 
 // NewLink creates a new link from one Zettel to another
-func NewLink(from, to Zettel) Link {
+func NewLink(from, to uuid.UUID) Link {
 	return Link{
 		From:      from,
 		To:        to,

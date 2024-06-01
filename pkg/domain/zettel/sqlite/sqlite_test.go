@@ -95,6 +95,37 @@ func TestSQLite_UpdateZettel(t *testing.T) {
 	}
 }
 
+func TestSQLite_AddLink(t *testing.T) {
+	type testCase struct {
+		name        string
+		setup      func() (zettel.Zettel, zettel.Zettel)
+		expectedErr error
+	}
+
+	testCases := []testCase{
+		{
+			name: "Can add link",
+			setup: func() (zettel.Zettel, zettel.Zettel) {
+				z1 := createZettel(t)
+				z2 := createZettel(t)
+
+				z1.AddLink(z2)
+				return z1, z2
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			z1, z2 := tc.setup()
+			if err := repo.AddLink(z1, z2); err != tc.expectedErr {
+				t.Errorf("expected error %v, got %v", tc.expectedErr, err)
+			}
+		})
+	}
+}
+
+
 func createZettel(t *testing.T) zettel.Zettel {
 	z, err := zettel.New("title", "content", zettel.Fleet)
 	if err != nil {

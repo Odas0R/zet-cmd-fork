@@ -1,0 +1,7 @@
+<html><body><h1>Zettelkasten</h1>
+<p>
+: 
+</p><a href=\"
+\">Archive</a> 
+<p>No zettels found.</p>
+<a href=\"/create\">Create Zettel</a> <a href=\"/initialize\">Initialize Workspace</a></body></html>
