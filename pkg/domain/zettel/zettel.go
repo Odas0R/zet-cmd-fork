@@ -23,6 +23,8 @@ type Zettel struct {
 
 	links     []Link
 	backlinks []Link
+
+	repository ZettelRepository
 }
 
 func New(title, content string, kind Kind) (Zettel, error) {

@@ -12,3 +12,5 @@ node_modules/
 
 # But explicitly track the cmd/zet folder
 !cmd/zet/
+
+tmp
