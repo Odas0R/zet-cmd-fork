@@ -7,6 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/odas0r/zet/pkg/database"
 	"github.com/odas0r/zet/pkg/domain/shared/sqlite"
+	"github.com/odas0r/zet/pkg/domain/shared/timestamp"
 	"github.com/odas0r/zet/pkg/domain/zettel"
 )
 
@@ -21,11 +22,30 @@ type sqliteZettel struct {
 	Kind    zettel.Kind  `db:"kind"`
 	Created *sqlite.Time `db:"created_at"`
 	Updated *sqlite.Time `db:"updated_at"`
+
+	Links []sqliteLink `db:"-"`
+}
+
+type sqliteLink struct {
+	From      uuid.UUID    `db:"zettel_id"`
+	To        uuid.UUID    `db:"link_id"`
+	CreatedAt *sqlite.Time `db:"created_at"`
+	UpdatedAt *sqlite.Time `db:"updated_at"`
 }
 
 // NewFromZettel takes in an aggregate root and returns a struct that can be
 // used to interact with the database
 func NewFromZettel(z zettel.Zettel) sqliteZettel {
+	var links []sqliteLink
+	for _, link := range z.Links() {
+		links = append(links, sqliteLink{
+			From:      link.From,
+			To:        link.To,
+			CreatedAt: &sqlite.Time{T: link.Timestamp.Created},
+			UpdatedAt: &sqlite.Time{T: link.Timestamp.Updated},
+		})
+	}
+
 	return sqliteZettel{
 		ID:      z.ID(),
 		Title:   z.Title(),
@@ -33,6 +53,7 @@ func NewFromZettel(z zettel.Zettel) sqliteZettel {
 		Kind:    z.Kind(),
 		Created: &sqlite.Time{T: z.Timestamp().Created},
 		Updated: &sqlite.Time{T: z.Timestamp().Updated},
+		Links:   links,
 	}
 }
 
@@ -46,6 +67,19 @@ func (sz sqliteZettel) ToAggregate() zettel.Zettel {
 	z.SetKind(sz.Kind)
 	z.SetCreated(sz.Created.T)
 	z.SetUpdated(sz.Updated.T)
+
+	var domainLinks []zettel.Link
+	for _, sl := range sz.Links {
+		domainLinks = append(domainLinks, zettel.Link{
+			From: sl.From,
+			To:   sl.To,
+			Timestamp: timestamp.Timestamp{
+				Created: sl.CreatedAt.T,
+				Updated: sl.UpdatedAt.T,
+			},
+		})
+	}
+	z.SetLinks(domainLinks)
 
 	return z
 }
@@ -76,12 +110,30 @@ func (r *SQLiteRepository) FindByID(id uuid.UUID) (zettel.Zettel, error) {
 		return zettel.Zettel{}, err
 	}
 
+	// Fetch links
+	linksQuery := `
+  select zettel_id, link_id, created_at, updated_at
+  from link
+  where zettel_id = $1
+  `
+	var links []sqliteLink
+	if err := r.db.Select(&links, linksQuery, id); err != nil {
+		return zettel.Zettel{}, err
+	}
+
+	// Set links in the struct
+	sz.Links = links
+
 	return sz.ToAggregate(), nil
 }
 
-// Save takes in an aggregate root and saves it to the database as an upsert
 func (r *SQLiteRepository) Save(z zettel.Zettel) error {
 	internal := NewFromZettel(z)
+
+	tx, err := r.db.Beginx()
+	if err != nil {
+		return err
+	}
 
 	query := `
   insert into zettel (id, title, content, kind, updated_at, created_at)
@@ -90,8 +142,42 @@ func (r *SQLiteRepository) Save(z zettel.Zettel) error {
 	update set title = excluded.title, content = excluded.content, kind = excluded.kind, updated_at = excluded.updated_at
   `
 
-	_, err := r.db.NamedExec(query, internal)
-	return err
+	_, err = tx.NamedExec(query, internal)
+	if err != nil {
+		tx.Rollback()
+		if err == sql.ErrNoRows {
+			return zettel.ErrZettelNotFound
+		}
+		return err
+	}
+
+	err = r.saveLinks(tx, internal.ID, internal.Links)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (r *SQLiteRepository) saveLinks(tx *sqlx.Tx, zettelID uuid.UUID, links []sqliteLink) error {
+	delQuery := `delete from link where zettel_id = $1`
+	_, err := tx.Exec(delQuery, zettelID)
+	if err != nil {
+		return err
+	}
+
+	insQuery := `
+  insert into link (zettel_id, link_id, created_at, updated_at)
+  values (:zettel_id, :link_id, :created_at, :updated_at)
+  `
+	for _, link := range links {
+		_, err = tx.NamedExec(insQuery, link)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *SQLiteRepository) Update(z zettel.Zettel) error {
@@ -141,24 +227,4 @@ func (r *SQLiteRepository) Delete(id uuid.UUID) error {
 	}
 
 	return nil
-}
-
-func (r *SQLiteRepository) AddLink(from, to uuid.UUID) error {
-	query := `
-        insert into link (zettel_id, link_id, created_at, updated_at)
-        values ($1, $2, strftime('%y-%m-%dt%h:%m:%fz'), strftime('%y-%m-%dt%h:%m:%fz'))
-        on conflict (zettel_id, link_id) do
-				update set updated_at = excluded.updated_at;
-    `
-	_, err := r.db.Exec(query, from, to)
-	return err
-}
-
-func (r *SQLiteRepository) RemoveLink(from, to uuid.UUID) error {
-	query := `
-        DELETE FROM link
-        WHERE zettel_id = $1 AND link_id = $2;
-    `
-	_, err := r.db.Exec(query, from, to)
-	return err
 }

@@ -7,8 +7,8 @@ import (
 
 // Link represents a connection between two Zettels
 type Link struct {
-	From      uuid.UUID // From        Zettel
-	To        uuid.UUID // To          Zettel
+	From      uuid.UUID 
+	To        uuid.UUID
 	Timestamp timestamp.Timestamp
 }
 

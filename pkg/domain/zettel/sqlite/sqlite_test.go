@@ -98,33 +98,42 @@ func TestSQLite_UpdateZettel(t *testing.T) {
 func TestSQLite_AddLink(t *testing.T) {
 	type testCase struct {
 		name        string
-		setup      func() (zettel.Zettel, zettel.Zettel)
+		setup       func() zettel.Zettel
 		expectedErr error
 	}
 
 	testCases := []testCase{
 		{
 			name: "Can add link",
-			setup: func() (zettel.Zettel, zettel.Zettel) {
+			setup: func() zettel.Zettel {
 				z1 := createZettel(t)
 				z2 := createZettel(t)
 
-				z1.AddLink(z2)
-				return z1, z2
+				z1.Link(z2.ID())
+				return z1
 			},
+			expectedErr: nil,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			z1, z2 := tc.setup()
-			if err := repo.AddLink(z1, z2); err != tc.expectedErr {
+			z := tc.setup()
+			if err := repo.Save(z); err != nil {
 				t.Errorf("expected error %v, got %v", tc.expectedErr, err)
+			}
+			// find the zettel to check if the link was added
+			z, err := repo.FindByID(z.ID())
+			if err != nil {
+				t.Error(err)
+			}
+			if len(z.Links()) == 0 {
+				t.Error("expected link to be added")
 			}
 		})
 	}
-}
 
+}
 
 func createZettel(t *testing.T) zettel.Zettel {
 	z, err := zettel.New("title", "content", zettel.Fleet)
