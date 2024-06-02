@@ -5,11 +5,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/odas0r/zet/pkg/database"
 	"github.com/odas0r/zet/pkg/domain/shared/sqlite"
 	"github.com/odas0r/zet/pkg/domain/workspace"
 )
 
-type SQLiteWorkspaceRepository struct {
+type SQLiteRepository struct {
 	db *sqlx.DB
 }
 
@@ -48,11 +49,17 @@ func (sw sqliteWorkspace) ToAggregate(zettelIDs []uuid.UUID) workspace.Workspace
 	return w
 }
 
-func NewWorkspaceRepository(db *sqlx.DB) *SQLiteWorkspaceRepository {
-	return &SQLiteWorkspaceRepository{db: db}
+func New(database *database.Database) (*SQLiteRepository, error) {
+	if err := database.Connect(); err != nil {
+		return nil, err
+	}
+
+	return &SQLiteRepository{
+		db: database.DB,
+	}, nil
 }
 
-func (r *SQLiteWorkspaceRepository) FindWorkspaceByID(id uuid.UUID) (workspace.Workspace, error) {
+func (r *SQLiteRepository) FindWorkspaceByID(id uuid.UUID) (workspace.Workspace, error) {
 	var sw sqliteWorkspace
 
 	query := `
@@ -82,7 +89,7 @@ func (r *SQLiteWorkspaceRepository) FindWorkspaceByID(id uuid.UUID) (workspace.W
 	return sw.ToAggregate(zettelIDs), nil
 }
 
-func (r *SQLiteWorkspaceRepository) FindAllWorkspaces() ([]workspace.Workspace, error) {
+func (r *SQLiteRepository) FindAllWorkspaces() ([]workspace.Workspace, error) {
 	query := `
   SELECT id, path, created_at, updated_at
   FROM workspace
@@ -105,7 +112,7 @@ func (r *SQLiteWorkspaceRepository) FindAllWorkspaces() ([]workspace.Workspace, 
 	return workspaces, nil
 }
 
-func (r *SQLiteWorkspaceRepository) findZettelIDsByWorkspaceID(workspaceID uuid.UUID) ([]uuid.UUID, error) {
+func (r *SQLiteRepository) findZettelIDsByWorkspaceID(workspaceID uuid.UUID) ([]uuid.UUID, error) {
 	query := `
   select zettel_id
   from workspace_zettel
@@ -118,7 +125,7 @@ func (r *SQLiteWorkspaceRepository) findZettelIDsByWorkspaceID(workspaceID uuid.
 	return zettelIDs, nil
 }
 
-func (r *SQLiteWorkspaceRepository) Save(w workspace.Workspace) error {
+func (r *SQLiteRepository) Save(w workspace.Workspace) error {
 	internal := NewFromWorkspace(w)
 
 	tx, err := r.db.Beginx()
@@ -149,7 +156,7 @@ func (r *SQLiteWorkspaceRepository) Save(w workspace.Workspace) error {
 	return tx.Commit()
 }
 
-func (r *SQLiteWorkspaceRepository) Update(w workspace.Workspace) error {
+func (r *SQLiteRepository) Update(w workspace.Workspace) error {
 	internal := NewFromWorkspace(w)
 
 	tx, err := r.db.Beginx()
@@ -179,13 +186,13 @@ func (r *SQLiteWorkspaceRepository) Update(w workspace.Workspace) error {
 	return tx.Commit()
 }
 
-func (r *SQLiteWorkspaceRepository) Delete(id uuid.UUID) error {
+func (r *SQLiteRepository) Delete(id uuid.UUID) error {
 	query := `delete from workspace where id = $1`
 	_, err := r.db.Exec(query, id)
 	return err
 }
 
-func (r *SQLiteWorkspaceRepository) saveWorkspaceZettels(tx *sqlx.Tx, workspaceID uuid.UUID, zettelIDs []uuid.UUID) error {
+func (r *SQLiteRepository) saveWorkspaceZettels(tx *sqlx.Tx, workspaceID uuid.UUID, zettelIDs []uuid.UUID) error {
 	// Delete existing workspace zettels
 	delQuery := `delete from workspace_zettel where workspace_id = $1`
 	_, err := tx.Exec(delQuery, workspaceID)

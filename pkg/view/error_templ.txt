@@ -1,0 +1,2 @@
+<html><head><title>Error</title></head><body><div style=\"color: red;\">
+</div><button onclick=\"window.history.back()\">Go Back</button></body></html>

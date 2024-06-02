@@ -1,0 +1,13 @@
+package view
+
+templ ErrorMessage(errorMessage string) {
+	<html>
+		<head>
+			<title>Error</title>
+		</head>
+		<body>
+			<div style="color: red;">{ errorMessage }</div>
+			<button onclick="window.history.back()">Go Back</button>
+		</body>
+	</html>
+}

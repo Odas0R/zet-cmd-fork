@@ -10,7 +10,6 @@ import (
 
 	"github.com/odas0r/zet/pkg/controllers"
 	"github.com/odas0r/zet/pkg/database"
-	"github.com/odas0r/zet/pkg/domain/workspace"
 	"github.com/odas0r/zet/pkg/router"
 	"github.com/odas0r/zet/pkg/router/middleware"
 	"github.com/pressly/goose/v3"
@@ -52,23 +51,36 @@ func main() {
 				Action: func(c *cli.Context) error {
 					port := c.String("port")
 					dev := c.Bool("dev")
-					// repo, err := sqlite.New(
-					// 	database.New(database.Options{
-					// 		URL:                "../../../../zettel.db",
-					// 		MaxOpenConnections: 1,
-					// 		MaxIdleConnections: 1,
-					// 		LogQueries:         true,
-					// 	}),
-					// )
-					// if err != nil {
-					// 	return err
-					// }
-					controller := controllers.NewController(workspace.Workspace{})
+
+					db := database.New(database.Options{
+						URL:                "../../../../zettel.db",
+						MaxOpenConnections: 1,
+						MaxIdleConnections: 1,
+						LogQueries:         true,
+					})
+
+					controller, err := controllers.NewController(db)
+					if err != nil {
+						log.Fatalf("failed to create controller: %v", err)
+					}
 
 					r := router.New()
 					r.Use(middleware.WithLogger)
+					r.Use(middleware.WithLayout)
 
-					r.HandleFunc("GET /", controller.HandleHome)
+					http.HandleFunc("/", controller.HandleHome)
+					http.HandleFunc("/workspaces", controller.HandleListWorkspaces)
+					http.HandleFunc("/workspaces/create", controller.HandleCreateWorkspaceForm)
+					http.HandleFunc("/workspaces/create", controller.HandleCreateWorkspace)
+					http.HandleFunc("/workspaces/edit/", controller.HandleEditWorkspaceForm)
+					http.HandleFunc("/workspaces/edit/", controller.HandleEditWorkspace)
+					http.HandleFunc("/workspaces/delete/", controller.HandleDeleteWorkspace)
+					http.HandleFunc("/zettels", controller.HandleListZettels)
+					http.HandleFunc("/zettels/create", controller.HandleCreateZettelForm)
+					http.HandleFunc("/zettels/create", controller.HandleCreateZettel)
+					http.HandleFunc("/zettels/edit/", controller.HandleEditZettelForm)
+					http.HandleFunc("/zettels/edit/", controller.HandleEditZettel)
+					http.HandleFunc("/zettels/delete/", controller.HandleDeleteZettel)
 
 					r.Handle("GET /public/",
 						http.StripPrefix("/public/", http.FileServer(http.Dir("public"))),
