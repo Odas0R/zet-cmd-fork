@@ -9,9 +9,8 @@ templ Layout(content templ.Component) {
 		</head>
 		<body>
 			<nav>
-				<a href="/" hx-get="/" hx-trigger="click" hx-target="#content">Home</a>
-				<a href="/workspaces" hx-get="/workspaces" hx-trigger="click" hx-target="#content">Workspaces</a>
-				<a href="/zettels" hx-get="/zettels" hx-trigger="click" hx-target="#content">Zettels</a>
+				<a href="/" hx-get="/" hx-trigger="click" hx-target="#content" hx-push-url="true">Home</a>
+				<a href="/workspaces" hx-get="/workspaces" hx-trigger="click" hx-target="#content" hx-push-url="true">Workspaces</a>
 			</nav>
 			<div id="content">
 				@content

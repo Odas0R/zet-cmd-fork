@@ -63,8 +63,8 @@ func main() {
 					}
 
 					r := router.New()
-
 					rr := r.Group("/")
+					rr.Use(middleware.WithMethods("GET", "POST", "DELETE"))
 					rr.Use(middleware.WithLayout)
 					rr.Use(middleware.WithLogger)
 

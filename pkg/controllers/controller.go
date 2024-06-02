@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/a-h/templ"
@@ -138,13 +137,7 @@ func (c *Controller) HandleDeleteWorkspace(w http.ResponseWriter, r *http.Reques
 }
 
 func (c *Controller) HandleListZettels(w http.ResponseWriter, r *http.Request) {
-	workspaceIDStr := r.PathValue("id")
-	if workspaceIDStr == "" {
-		c.renderError(w, r, errors.New("missing workspace_id parameter"))
-		return
-	}
-
-	workspaceID, err := uuid.Parse(workspaceIDStr)
+	workspaceID, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		c.renderError(w, r, err)
 		return
@@ -233,21 +226,22 @@ func (c *Controller) HandleEditZettelForm(w http.ResponseWriter, r *http.Request
 }
 
 func (c *Controller) HandleEditZettel(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("zettelId")
-	zettID, err := uuid.Parse(id)
+	zetID, err := uuid.Parse(r.PathValue("zettelId"))
 	if err != nil {
 		c.renderError(w, r, err)
 		return
 	}
-	zett, err := c.zettelRepo.FindByID(zettID)
+
+	zet, err := c.zettelRepo.FindByID(zetID)
 	if err != nil {
 		c.renderError(w, r, err)
 		return
 	}
-	zett.SetTitle(r.FormValue("title"))
-	zett.SetBody(r.FormValue("content"))
-	zett.SetKind(zettel.Kind(r.FormValue("kind")))
-	if err := c.zettelRepo.Save(zett); err != nil {
+	zet.SetTitle(r.FormValue("title"))
+	zet.SetBody(r.FormValue("content"))
+	zet.SetKind(zettel.Kind(r.FormValue("kind")))
+
+	if err := c.zettelRepo.Save(zet); err != nil {
 		c.renderError(w, r, err)
 		return
 	}
