@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	ErrInvalidPath    = errors.New("invalid workspace path")
-	ErrZettelNotFound = errors.New("zettel not found in workspace")
+	ErrInvalidPath         = errors.New("invalid workspace path")
+	ErrZettelNotFound      = errors.New("zettel not found in workspace")
+	ErrZettelAlreadyExists = errors.New("zettel already exists in workspace")
 )
 
 type Workspace struct {
@@ -32,7 +33,7 @@ func New(path string) (Workspace, error) {
 		id:        uuid.New(),
 		path:      path,
 		timestamp: timestamp.New(),
-		zettelIDs: make(map[uuid.UUID]struct{}),
+		zettelIDs: map[uuid.UUID]struct{}{},
 	}, nil
 }
 
@@ -47,11 +48,25 @@ func (w *Workspace) SetPath(path string)          { w.path = path }
 func (w *Workspace) SetCreated(created time.Time) { w.timestamp.Created = created }
 func (w *Workspace) SetUpdated(updated time.Time) { w.timestamp.Updated = updated }
 
-func (w *Workspace) AddZettel(zID uuid.UUID) {
+func (w *Workspace) AddZettel(zID uuid.UUID) error {
+	if w.zettelIDs == nil {
+		w.zettelIDs = map[uuid.UUID]struct{}{}
+	}
+
+	if _, exists := w.zettelIDs[zID]; exists {
+		return ErrZettelAlreadyExists
+	}
+
+	// Add the zettel to the workspace
 	w.zettelIDs[zID] = struct{}{}
+
+	return nil
 }
 
 func (w *Workspace) RemoveZettel(id uuid.UUID) error {
+	if w.zettelIDs == nil {
+		w.zettelIDs = map[uuid.UUID]struct{}{}
+	}
 	if _, exists := w.zettelIDs[id]; !exists {
 		return ErrZettelNotFound
 	}

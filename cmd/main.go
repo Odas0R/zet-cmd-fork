@@ -77,12 +77,12 @@ func main() {
 					rr.HandleFunc("DELETE /workspaces/delete/{id}", controller.HandleDeleteWorkspace)
 					rr.HandleFunc("GET /workspaces/{id}", controller.HandleListZettels)
 
-					rr.HandleFunc("GET /zettels/create", controller.HandleCreateZettelForm)
-					rr.HandleFunc("POST /zettels/create", controller.HandleCreateZettel)
+					rr.HandleFunc("GET /workspaces/{id}/zettels/create", controller.HandleCreateZettelForm)
+					rr.HandleFunc("POST /workspaces/{id}/zettels/create", controller.HandleCreateZettel)
 
-					rr.HandleFunc("GET /zettels/edit/{id}", controller.HandleEditZettelForm)
-					rr.HandleFunc("POST /zettels/edit/{id}", controller.HandleEditZettel)
-					rr.HandleFunc("DELETE /zettels/delete/{id}", controller.HandleDeleteZettel)
+					rr.HandleFunc("GET /workspaces/{id}/zettels/edit/{zettelId}", controller.HandleEditZettelForm)
+					rr.HandleFunc("POST /workspaces/{id}/zettels/edit/{zettelId}", controller.HandleEditZettel)
+					rr.HandleFunc("DELETE /workspaces/{id}/zettels/delete/{zettelId}", controller.HandleDeleteZettel)
 
 					r.Handle("GET /public/",
 						http.StripPrefix("/public/", http.FileServer(http.Dir("public"))),

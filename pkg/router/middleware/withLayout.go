@@ -10,10 +10,23 @@ import (
 	"github.com/odas0r/zet/pkg/view"
 )
 
-// WithLayout is a middleware that adds the layout to the component
-// if the component is a ComponentHandler
+type ResponseWriter struct {
+	http.ResponseWriter
+	buf *bytes.Buffer
+}
+
+func (rw *ResponseWriter) Write(b []byte) (int, error) {
+	return rw.buf.Write(b)
+}
+
 func WithLayout(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check if the request is an htmx request
+		if r.Header.Get("HX-Request") == "true" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		crw := &ResponseWriter{
 			ResponseWriter: w,
 			buf:            new(bytes.Buffer),

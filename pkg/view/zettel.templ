@@ -2,38 +2,54 @@ package view
 
 import (
 	"github.com/odas0r/zet/pkg/domain/zettel"
+	"github.com/google/uuid"
 )
 
-templ CreateZettelForm() {
-	<form action="/zettels/create" method="post" hx-post="/zettels/create" hx-swap="outerHTML">
+templ CreateZettelForm(workspaceID uuid.UUID) {
+	<form
+		method="post"
+		action={ url("/workspaces/%s/zettels/create", workspaceID) }
+		hx-post={ string(url("/workspaces/%s/zettels/create", workspaceID)) }
+		hx-swap="outerHTML"
+	>
 		<input type="text" name="title" placeholder="Title" required/>
 		<textarea name="content" placeholder="Content" required></textarea>
 		<select name="kind">
-			<option value="Permanent">Permanent</option>
-			<option value="Fleet">Fleet</option>
+			<option value="" disabled selected>Select a kind</option>
+			<option value="permanent">Permanent</option>
+			<option value="fleet">Fleet</option>
 		</select>
 		<button type="submit">Create Zettel</button>
 	</form>
 }
 
-templ ListZettels(zettels []zettel.Zettel) {
+templ ListZettels(workspaceID uuid.UUID, zettels []zettel.Zettel) {
 	<ul>
 		for _, z := range zettels {
 			<li>
 				{ z.Title() } - { string(z.Kind()) }
-				<button hx-get={ string(url("/zettels/edit/%s", z.ID())) } hx-target="#content">Edit</button>
-				<button hx-delete={ string(url("/zettels/delete/%s", z.ID())) } hx-confirm="Are you sure?" hx-swap="outerHTML">Delete</button>
+				<button hx-get={ string(url("/workspaces/%s/zettels/edit/%s", workspaceID, z.ID())) } hx-target="#content">Edit</button>
+				<button hx-delete={ string(url("/workspaces/%s/zettels/delete/%s", workspaceID, z.ID())) } hx-confirm="Are you sure?" hx-swap="outerHTML">Delete</button>
 			</li>
 		}
 	</ul>
-	<button hx-get="/zettels/create" hx-target="#content">Create New Zettel</button>
+	<button hx-get={ string(url("/workspaces/%s/zettels/create", workspaceID)) } hx-target="#content">Create New Zettel</button>
 }
 
-templ EditZettelForm(zettel zettel.Zettel) {
-	<form action={ url("/zettels/edit/%s", zettel.ID()) } method="post" hx-post={ string(url("/zettels/edit/%s", zettel.ID())) } hx-swap="outerHTML">
+templ EditZettelForm(workspaceID uuid.UUID, zettel zettel.Zettel) {
+	<form
+		action={ url("/workspaces/%s/zettels/edit/%s", workspaceID, zettel.ID()) }
+		method="post"
+		hx-post={ string(url("/workspaces/%s/zettels/edit/%s", workspaceID, zettel.ID())) }
+		hx-swap="outerHTML"
+	>
 		<input type="text" name="title" value={ zettel.Title() } required/>
 		<textarea name="content" required value={ zettel.Content() }></textarea>
-		<select name="kind"></select>
+		<select name="kind">
+			<option value="" disabled selected>Select a kind</option>
+			<option value="permanent">Permanent</option>
+			<option value="fleet">Fleet</option>
+		</select>
 		<button type="submit">Save</button>
 	</form>
 }

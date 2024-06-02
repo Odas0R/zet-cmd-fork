@@ -2,15 +2,22 @@ package view
 
 import (
 	"github.com/odas0r/zet/pkg/domain/workspace"
+	"fmt"
 )
 
 templ ListWorkspaces(workspaces []workspace.Workspace) {
 	<ul>
 		for _, workspace := range workspaces {
-			<li>
+			<li id={ workspace.ID().String() }>
 				{ workspace.Path() }
+				<button hx-get={ string(url("/workspaces/%s", workspace.ID())) } hx-target="#content" hx-push-url="true">View</button>
 				<button hx-get={ string(url("/workspaces/edit/%s", workspace.ID())) } hx-target="#content">Edit</button>
-				<button hx-delete={ string(url("/workspaces/delete/%s", workspace.ID())) } hx-confirm="Are you sure?" hx-swap="outerHTML">Delete</button>
+				<button
+					hx-delete={ string(url("/workspaces/delete/%s", workspace.ID())) }
+					hx-confirm="Are you sure?"
+					hx-target={ fmt.Sprintf("#%s", workspace.ID()) }
+					hx-swap="delete"
+				>Delete</button>
 			</li>
 		}
 	</ul>

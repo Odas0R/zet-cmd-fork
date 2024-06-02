@@ -155,16 +155,35 @@ func (c *Controller) HandleListZettels(w http.ResponseWriter, r *http.Request) {
 		c.renderError(w, r, err)
 		return
 	}
-	component := view.ListZettels(zettels)
+	component := view.ListZettels(workspaceID, zettels)
 	templ.Handler(component).ServeHTTP(w, r)
 }
 
 func (c *Controller) HandleCreateZettelForm(w http.ResponseWriter, r *http.Request) {
-	component := view.CreateZettelForm()
+	workspaceIDStr := r.PathValue("id")
+	workspaceID, err := uuid.Parse(workspaceIDStr)
+	if err != nil {
+		c.renderError(w, r, err)
+		return
+	}
+
+	component := view.CreateZettelForm(workspaceID)
 	templ.Handler(component).ServeHTTP(w, r)
 }
 
 func (c *Controller) HandleCreateZettel(w http.ResponseWriter, r *http.Request) {
+	workspaceID, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		c.renderError(w, r, err)
+		return
+	}
+
+	workspace, err := c.workspaceRepo.FindWorkspaceByID(workspaceID)
+	if err != nil {
+		c.renderError(w, r, err)
+		return
+	}
+
 	title := r.FormValue("title")
 	content := r.FormValue("content")
 	kind := r.FormValue("kind")
@@ -178,27 +197,43 @@ func (c *Controller) HandleCreateZettel(w http.ResponseWriter, r *http.Request) 
 		c.renderError(w, r, err)
 		return
 	}
+
+	// Add the zettel to the workspace
+	workspace.AddZettel(zett.ID())
+
+	// Save the workspace
+	if err := c.workspaceRepo.Save(workspace); err != nil {
+		c.renderError(w, r, err)
+		return
+	}
+
 	c.HandleListZettels(w, r)
 }
 
 func (c *Controller) HandleEditZettelForm(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	zettID, err := uuid.Parse(id)
+	workspaceId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
 		c.renderError(w, r, err)
 		return
 	}
-	zett, err := c.zettelRepo.FindByID(zettID)
+
+	zetID, err := uuid.Parse(r.PathValue("zettelId"))
 	if err != nil {
 		c.renderError(w, r, err)
 		return
 	}
-	component := view.EditZettelForm(zett)
+
+	zet, err := c.zettelRepo.FindByID(zetID)
+	if err != nil {
+		c.renderError(w, r, err)
+		return
+	}
+	component := view.EditZettelForm(workspaceId, zet)
 	templ.Handler(component).ServeHTTP(w, r)
 }
 
 func (c *Controller) HandleEditZettel(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
+	id := r.PathValue("zettelId")
 	zettID, err := uuid.Parse(id)
 	if err != nil {
 		c.renderError(w, r, err)
@@ -220,7 +255,7 @@ func (c *Controller) HandleEditZettel(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) HandleDeleteZettel(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
+	id := r.PathValue("zettelId")
 	zettID, err := uuid.Parse(id)
 	if err != nil {
 		c.renderError(w, r, err)
