@@ -33,7 +33,7 @@ templ ListZettels(workspaceID uuid.UUID, zettels []zettel.Zettel) {
 				<button
 					hx-delete={ string(url("/workspaces/%s/zettels/delete/%s", workspaceID, z.ID())) }
 					hx-confirm="Are you sure?"
-					hx-target={ fmt.Sprintf("#%s", z.ID()) }
+					hx-target={ fmt.Sprintf("[id='%s']", z.ID()) }
 					hx-swap="delete"
 				>Delete</button>
 			</li>

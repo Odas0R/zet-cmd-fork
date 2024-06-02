@@ -15,7 +15,7 @@ templ ListWorkspaces(workspaces []workspace.Workspace) {
 				<button
 					hx-delete={ string(url("/workspaces/delete/%s", workspace.ID())) }
 					hx-confirm="Are you sure?"
-					hx-target={ fmt.Sprintf("#%s", workspace.ID()) }
+					hx-target={ fmt.Sprintf("[id='%s']", workspace.ID()) }
 					hx-swap="delete"
 				>Delete</button>
 			</li>
