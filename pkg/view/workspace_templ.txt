@@ -1,0 +1,11 @@
+<ul>
+<li>
+ <button hx-get=\"
+\" hx-target=\"#content\">Edit</button> <button hx-delete=\"
+\" hx-confirm=\"Are you sure?\" hx-swap=\"outerHTML\">Delete</button></li>
+</ul><button hx-get=\"/workspaces/create\" hx-target=\"#content\">Create New Workspace</button>
+<form action=\"/workspaces/create\" method=\"post\" hx-post=\"/workspaces/create\" hx-swap=\"outerHTML\"><input type=\"text\" name=\"path\" placeholder=\"Path\" required> <button type=\"submit\">Create Workspace</button></form>
+<form action=\"
+\" method=\"post\" hx-post=\"
+\" hx-swap=\"outerHTML\"><input type=\"text\" name=\"path\" value=\"
+\" required> <button type=\"submit\">Save</button></form>

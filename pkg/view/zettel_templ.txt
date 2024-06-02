@@ -1,0 +1,13 @@
+<form action=\"/zettels/create\" method=\"post\" hx-post=\"/zettels/create\" hx-swap=\"outerHTML\"><input type=\"text\" name=\"title\" placeholder=\"Title\" required> <textarea name=\"content\" placeholder=\"Content\" required></textarea> <select name=\"kind\"><option value=\"Permanent\">Permanent</option> <option value=\"Fleet\">Fleet</option></select> <button type=\"submit\">Create Zettel</button></form>
+<ul>
+<li>
+ - 
+ <button hx-get=\"
+\" hx-target=\"#content\">Edit</button> <button hx-delete=\"
+\" hx-confirm=\"Are you sure?\" hx-swap=\"outerHTML\">Delete</button></li>
+</ul><button hx-get=\"/zettels/create\" hx-target=\"#content\">Create New Zettel</button>
+<form action=\"
+\" method=\"post\" hx-post=\"
+\" hx-swap=\"outerHTML\"><input type=\"text\" name=\"title\" value=\"
+\" required> <textarea name=\"content\" required value=\"
+\"></textarea> <select name=\"kind\"></select> <button type=\"submit\">Save</button></form>

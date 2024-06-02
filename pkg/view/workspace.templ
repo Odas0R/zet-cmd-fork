@@ -1,0 +1,32 @@
+package view
+
+import (
+	"github.com/odas0r/zet/pkg/domain/workspace"
+)
+
+templ ListWorkspaces(workspaces []workspace.Workspace) {
+	<ul>
+		for _, workspace := range workspaces {
+			<li>
+				{ workspace.Path() }
+				<button hx-get={ string(url("/workspaces/edit/%s", workspace.ID())) } hx-target="#content">Edit</button>
+				<button hx-delete={ string(url("/workspaces/delete/%s", workspace.ID())) } hx-confirm="Are you sure?" hx-swap="outerHTML">Delete</button>
+			</li>
+		}
+	</ul>
+	<button hx-get="/workspaces/create" hx-target="#content">Create New Workspace</button>
+}
+
+templ CreateWorkspaceForm() {
+	<form action="/workspaces/create" method="post" hx-post="/workspaces/create" hx-swap="outerHTML">
+		<input type="text" name="path" placeholder="Path" required/>
+		<button type="submit">Create Workspace</button>
+	</form>
+}
+
+templ EditWorkspaceForm(workspace workspace.Workspace) {
+	<form action={ url("/workspaces/edit/%s", workspace.ID()) } method="post" hx-post={ string(url("/workspaces/edit/%s", workspace.ID())) } hx-swap="outerHTML">
+		<input type="text" name="path" value={ workspace.Path() } required/>
+		<button type="submit">Save</button>
+	</form>
+}
