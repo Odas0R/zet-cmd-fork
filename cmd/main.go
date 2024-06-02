@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/odas0r/zet/pkg/controllers"
 	"github.com/odas0r/zet/pkg/database"
@@ -68,11 +69,6 @@ func main() {
 					r.Use(middleware.WithLogger)
 
 					r.HandleFunc("GET /", controller.HandleHome)
-					r.HandleFunc("GET /create", controller.HandleCreateForm)
-					r.HandleFunc("POST /create", controller.HandleCreate)
-					r.HandleFunc("GET /archive/{id}", controller.HandleArchive)
-					r.HandleFunc("GET /initialize", controller.HandleInitializeForm)
-					r.HandleFunc("POST /initialize", controller.HandleInitialize)
 
 					r.Handle("GET /public/",
 						http.StripPrefix("/public/", http.FileServer(http.Dir("public"))),
@@ -87,6 +83,30 @@ func main() {
 				Name:  "migrate",
 				Usage: "Migrate the database to the latest version",
 				Subcommands: []*cli.Command{
+					{
+						Name:  "create",
+						Usage: "Create a new migration file",
+						Action: func(c *cli.Context) error {
+							if len(c.Args().Slice()) == 0 {
+								return fmt.Errorf("missing migration name")
+							}
+
+							db := database.New(database.Options{
+								URL: "./zettel.db",
+							})
+
+							if err := db.Connect(); err != nil {
+								return err
+							}
+
+							name := c.Args().First()
+							if err := goose.Create(db.DB.DB, "migrations", name, "go"); err != nil {
+								return err
+							}
+
+							return nil
+						},
+					},
 					{
 						Name:  "up",
 						Usage: "Migrate the database to the latest version",
@@ -179,7 +199,9 @@ func main() {
 
 							fmt.Println("=== migration status ===")
 							for _, s := range stats {
-								log.Printf("%-3s %-2v %v\n", s.Source.Type, s.Source.Version, s.State)
+								// get the basename of a path
+								file := filepath.Base(s.Source.Path)
+								log.Printf("%s %v\n", file, s.State)
 							}
 
 							return nil
