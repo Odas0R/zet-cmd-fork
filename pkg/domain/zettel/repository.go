@@ -13,6 +13,7 @@ var (
 
 type Repository interface {
 	FindByID(id uuid.UUID) (Zettel, error)
+	FindZettelsByWorkspaceID(id uuid.UUID) ([]Zettel, error)
 	Save(zettel Zettel) error
 	Update(z Zettel) error
 	Delete(id uuid.UUID) error

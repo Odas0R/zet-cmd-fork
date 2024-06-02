@@ -53,10 +53,8 @@ func main() {
 					dev := c.Bool("dev")
 
 					db := database.New(database.Options{
-						URL:                "../../../../zettel.db",
-						MaxOpenConnections: 1,
-						MaxIdleConnections: 1,
-						LogQueries:         true,
+						URL:        "zettel.db",
+						LogQueries: true,
 					})
 
 					controller, err := controllers.NewController(db)
@@ -65,22 +63,26 @@ func main() {
 					}
 
 					r := router.New()
-					r.Use(middleware.WithLogger)
-					r.Use(middleware.WithLayout)
 
-					http.HandleFunc("/", controller.HandleHome)
-					http.HandleFunc("/workspaces", controller.HandleListWorkspaces)
-					http.HandleFunc("/workspaces/create", controller.HandleCreateWorkspaceForm)
-					http.HandleFunc("/workspaces/create", controller.HandleCreateWorkspace)
-					http.HandleFunc("/workspaces/edit/", controller.HandleEditWorkspaceForm)
-					http.HandleFunc("/workspaces/edit/", controller.HandleEditWorkspace)
-					http.HandleFunc("/workspaces/delete/", controller.HandleDeleteWorkspace)
-					http.HandleFunc("/zettels", controller.HandleListZettels)
-					http.HandleFunc("/zettels/create", controller.HandleCreateZettelForm)
-					http.HandleFunc("/zettels/create", controller.HandleCreateZettel)
-					http.HandleFunc("/zettels/edit/", controller.HandleEditZettelForm)
-					http.HandleFunc("/zettels/edit/", controller.HandleEditZettel)
-					http.HandleFunc("/zettels/delete/", controller.HandleDeleteZettel)
+					rr := r.Group("/")
+					rr.Use(middleware.WithLayout)
+					rr.Use(middleware.WithLogger)
+
+					rr.HandleFunc("GET /", controller.HandleHome)
+					rr.HandleFunc("GET /workspaces", controller.HandleListWorkspaces)
+					rr.HandleFunc("GET /workspaces/create", controller.HandleCreateWorkspaceForm)
+					rr.HandleFunc("POST /workspaces/create", controller.HandleCreateWorkspace)
+					rr.HandleFunc("GET /workspaces/edit/{id}", controller.HandleEditWorkspaceForm)
+					rr.HandleFunc("POST /workspaces/edit/{id}", controller.HandleEditWorkspace)
+					rr.HandleFunc("DELETE /workspaces/delete/{id}", controller.HandleDeleteWorkspace)
+					rr.HandleFunc("GET /workspaces/{id}", controller.HandleListZettels)
+
+					rr.HandleFunc("GET /zettels/create", controller.HandleCreateZettelForm)
+					rr.HandleFunc("POST /zettels/create", controller.HandleCreateZettel)
+
+					rr.HandleFunc("GET /zettels/edit/{id}", controller.HandleEditZettelForm)
+					rr.HandleFunc("POST /zettels/edit/{id}", controller.HandleEditZettel)
+					rr.HandleFunc("DELETE /zettels/delete/{id}", controller.HandleDeleteZettel)
 
 					r.Handle("GET /public/",
 						http.StripPrefix("/public/", http.FileServer(http.Dir("public"))),

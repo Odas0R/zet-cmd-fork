@@ -1,8 +1,8 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
-	"path"
 
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
@@ -88,7 +88,7 @@ func (c *Controller) HandleCreateWorkspace(w http.ResponseWriter, r *http.Reques
 }
 
 func (c *Controller) HandleEditWorkspaceForm(w http.ResponseWriter, r *http.Request) {
-	id := path.Base(r.URL.Path)
+	id := r.PathValue("id")
 	wrkID, err := uuid.Parse(id)
 	if err != nil {
 		c.renderError(w, r, err)
@@ -104,7 +104,7 @@ func (c *Controller) HandleEditWorkspaceForm(w http.ResponseWriter, r *http.Requ
 }
 
 func (c *Controller) HandleEditWorkspace(w http.ResponseWriter, r *http.Request) {
-	id := path.Base(r.URL.Path)
+	id := r.PathValue("id")
 	wrkID, err := uuid.Parse(id)
 	if err != nil {
 		c.renderError(w, r, err)
@@ -124,7 +124,7 @@ func (c *Controller) HandleEditWorkspace(w http.ResponseWriter, r *http.Request)
 }
 
 func (c *Controller) HandleDeleteWorkspace(w http.ResponseWriter, r *http.Request) {
-	id := path.Base(r.URL.Path)
+	id := r.PathValue("id")
 	wrkID, err := uuid.Parse(id)
 	if err != nil {
 		c.renderError(w, r, err)
@@ -138,7 +138,19 @@ func (c *Controller) HandleDeleteWorkspace(w http.ResponseWriter, r *http.Reques
 }
 
 func (c *Controller) HandleListZettels(w http.ResponseWriter, r *http.Request) {
-	zettels, err := c.zettelRepo.FindAllZettels() // You'll need to implement this method in the repository
+	workspaceIDStr := r.PathValue("id")
+	if workspaceIDStr == "" {
+		c.renderError(w, r, errors.New("missing workspace_id parameter"))
+		return
+	}
+
+	workspaceID, err := uuid.Parse(workspaceIDStr)
+	if err != nil {
+		c.renderError(w, r, err)
+		return
+	}
+
+	zettels, err := c.zettelRepo.FindZettelsByWorkspaceID(workspaceID)
 	if err != nil {
 		c.renderError(w, r, err)
 		return
@@ -170,7 +182,7 @@ func (c *Controller) HandleCreateZettel(w http.ResponseWriter, r *http.Request) 
 }
 
 func (c *Controller) HandleEditZettelForm(w http.ResponseWriter, r *http.Request) {
-	id := path.Base(r.URL.Path)
+	id := r.PathValue("id")
 	zettID, err := uuid.Parse(id)
 	if err != nil {
 		c.renderError(w, r, err)
@@ -186,7 +198,7 @@ func (c *Controller) HandleEditZettelForm(w http.ResponseWriter, r *http.Request
 }
 
 func (c *Controller) HandleEditZettel(w http.ResponseWriter, r *http.Request) {
-	id := path.Base(r.URL.Path)
+	id := r.PathValue("id")
 	zettID, err := uuid.Parse(id)
 	if err != nil {
 		c.renderError(w, r, err)
@@ -208,7 +220,7 @@ func (c *Controller) HandleEditZettel(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) HandleDeleteZettel(w http.ResponseWriter, r *http.Request) {
-	id := path.Base(r.URL.Path)
+	id := r.PathValue("id")
 	zettID, err := uuid.Parse(id)
 	if err != nil {
 		c.renderError(w, r, err)

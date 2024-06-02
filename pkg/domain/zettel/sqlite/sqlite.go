@@ -180,6 +180,29 @@ func (r *SQLiteRepository) saveLinks(tx *sqlx.Tx, zettelID uuid.UUID, links []sq
 	return nil
 }
 
+func (r *SQLiteRepository) FindZettelsByWorkspaceID(workspaceID uuid.UUID) ([]zettel.Zettel, error) {
+	zettelsQuery := `
+  select zettel_id
+  from workspace_zettel
+  where workspace_id = $1
+  `
+	var zettelIDs []uuid.UUID
+	if err := r.db.Select(&zettelIDs, zettelsQuery, workspaceID); err != nil {
+		return nil, err
+	}
+
+	// Fetch zettel details
+	var zettels []zettel.Zettel
+	for _, zID := range zettelIDs {
+		z, err := r.FindByID(zID)
+		if err != nil {
+			return nil, err
+		}
+		zettels = append(zettels, z)
+	}
+	return zettels, nil
+}
+
 func (r *SQLiteRepository) Update(z zettel.Zettel) error {
 	internal := NewFromZettel(z)
 
